@@ -8,7 +8,7 @@ The purpose of this example is to provide details as to how one would go about u
 
 - Actix Web 3.3.3 or newer
 
-- PostgreSQL 14.0 or newer
+- PostgreSQL 14.1 or newer
 
 - Rust 1.57.0 or newer
 
@@ -58,4 +58,4 @@ Zero to GraphQL Using Rust is released under the [MIT license](./LICENSE.md).
 
 ## Copyright
 
-copyright:: (c) Copyright 2021 Conrad Taylor. All Rights Reserved.
+copyright:: (c) Copyright 2022 Conrad Taylor. All Rights Reserved.
