@@ -8,7 +8,7 @@ The purpose of this example is to provide details as to how one would go about u
 
 - Actix Web 4.14.0 or newer
 
-- juniper 0.17.1 or newer
+- Juniper 0.17.1 or newer
 
 - PostgreSQL 18.4 or newer
 
