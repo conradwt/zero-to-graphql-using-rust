@@ -1,5 +1,95 @@
-use sqlx::{Connection, PgConnection, PgPool, postgres::PgConnectOptions};
+use sqlx::{Connection, PgConnection, PgPool, postgres::{PgConnectOptions, PgPoolOptions}};
+use std::collections::HashMap;
+use std::env;
+use std::fs;
+use std::path::Path;
 use std::str::FromStr;
+
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct DbConfig {
+    pub adapter: Option<String>,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub database: Option<String>,
+    pub pool: Option<u32>,
+    pub url: Option<String>,
+}
+
+fn expand_env_vars(text: &str) -> String {
+    let mut result = text.to_string();
+    
+    // Replace <%= ENV['VAR'] %> (Ruby style)
+    while let Some(start_idx) = result.find("<%= ENV['") {
+        if let Some(end_idx) = result[start_idx..].find("'] %>") {
+            let actual_end_idx = start_idx + end_idx;
+            let var_name = &result[start_idx + 9..actual_end_idx];
+            let val = env::var(var_name).unwrap_or_default();
+            result.replace_range(start_idx..(actual_end_idx + 5), &val);
+        } else {
+            break;
+        }
+    }
+    
+    // Replace ${VAR} (Standard env style)
+    while let Some(start_idx) = result.find("${") {
+        if let Some(end_idx) = result[start_idx..].find("}") {
+            let actual_end_idx = start_idx + end_idx;
+            let var_name = &result[start_idx + 2..actual_end_idx];
+            let val = env::var(var_name).unwrap_or_default();
+            result.replace_range(start_idx..(actual_end_idx + 1), &val);
+        } else {
+            break;
+        }
+    }
+    
+    result
+}
+
+impl DbConfig {
+    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+        let env_name = env::var("RUST_ENV")
+            .or_else(|_| env::var("APP_ENV"))
+            .unwrap_or_else(|_| "development".to_string());
+            
+        let config_path = Path::new("config/database.yml");
+        if !config_path.exists() {
+            return Err("config/database.yml not found".into());
+        }
+        
+        let content = fs::read_to_string(config_path)?;
+        let expanded = expand_env_vars(&content);
+        
+        let yml: HashMap<String, DbConfig> = serde_yaml::from_str(&expanded)?;
+        
+        let config = yml.get(&env_name)
+            .ok_or_else(|| format!("Environment '{}' not found in database.yml", env_name))?
+            .clone();
+            
+        Ok(config)
+    }
+
+    pub fn to_connection_string(&self) -> String {
+        if let Some(ref url) = self.url {
+            if !url.is_empty() {
+                return url.clone();
+            }
+        }
+        
+        let host = self.host.as_deref().unwrap_or("localhost");
+        let port = self.port.unwrap_or(5432);
+        let username = self.username.as_deref().unwrap_or("postgres");
+        let password = self.password.as_deref().unwrap_or("");
+        let database = self.database.as_deref().unwrap_or("");
+        
+        if password.is_empty() {
+            format!("postgres://{}@{}:{}/{}", username, host, port, database)
+        } else {
+            format!("postgres://{}:{}@{}:{}/{}", username, password, host, port, database)
+        }
+    }
+}
 
 pub async fn create_database_if_not_exists(database_url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let options = PgConnectOptions::from_str(database_url)?;
@@ -47,16 +137,27 @@ pub async fn create_database_if_not_exists(database_url: &str) -> Result<(), Box
     Ok(())
 }
 
-pub async fn setup_database(database_url: &str) -> Result<PgPool, Box<dyn std::error::Error>> {
-    create_database_if_not_exists(database_url).await?;
+pub async fn setup_database_with_config(config: &DbConfig) -> Result<PgPool, Box<dyn std::error::Error>> {
+    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| config.to_connection_string());
     
-    let pool = PgPool::connect(database_url).await?;
+    create_database_if_not_exists(&database_url).await?;
     
+    let pool_size = config.pool.unwrap_or(5);
+    let pool = PgPoolOptions::new()
+        .max_connections(pool_size)
+        .connect(&database_url)
+        .await?;
+        
     // Run embedded migrations
     sqlx::migrate!("./migrations").run(&pool).await?;
     log::info!("Migrations run successfully.");
     
     Ok(pool)
+}
+
+pub async fn setup_database() -> Result<PgPool, Box<dyn std::error::Error>> {
+    let config = DbConfig::load()?;
+    setup_database_with_config(&config).await
 }
 
 pub async fn seed_database(pool: &PgPool) -> Result<(), Box<dyn std::error::Error>> {

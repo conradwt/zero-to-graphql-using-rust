@@ -5,11 +5,12 @@ use juniper::{graphql_value, Variables};
 
 async fn setup_test_db() -> PgPool {
     dotenvy::dotenv().ok();
-    let db_url = env::var("TEST_DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/zero_rust_test".to_string());
-        
-    db::create_database_if_not_exists(&db_url).await.unwrap();
-    let pool = db::setup_database(&db_url).await.unwrap();
+    unsafe {
+        env::set_var("RUST_ENV", "test");
+    }
+    
+    let config = db::DbConfig::load().expect("Failed to load database config in test");
+    let pool = db::setup_database_with_config(&config).await.unwrap();
     db::seed_database(&pool).await.unwrap();
     pool
 }

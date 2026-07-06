@@ -86,7 +86,7 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
 1.  create the project
 
     ```zsh
-    cargo new zero-to-graphql-using-rust --edition 2021
+    cargo new zero-to-graphql-using-rust --edition 2024
     ```
 
 2.  switch to the project directory
@@ -95,8 +95,32 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
     cd zero-to-graphql-using-rust
     ```
 
-3.  create the `.env` file with the following database credentials:
+3.  create the `config/database.yml` file with the following database environments and credentials:
 
+    ```yaml
+    default: &default
+      adapter: postgresql
+      host: localhost
+      port: 5432
+      username: postgres
+      password: postgres
+      pool: 5
+
+    development:
+      <<: *default
+      database: zero_rust_dev
+
+    test:
+      <<: *default
+      database: zero_rust_test
+
+    production:
+      <<: *default
+      url: <%= ENV['DATABASE_URL'] %>
+      database: zero_rust_prod
+    ```
+
+    You may also optionally create a `.env` file to override the database connection URL for local development:
     ```env
     DATABASE_URL=postgres://postgres:postgres@localhost:5432/zero_rust_dev
     ```
@@ -117,6 +141,7 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
     env_logger = "0.11"
     log = "0.4"
     futures-util = "0.3"
+    serde_yaml = "0.9.34"
     ```
 
 5.  create database migrations for the tables. We will place these under `migrations/`:

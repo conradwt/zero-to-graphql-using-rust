@@ -67,6 +67,9 @@ RUN chown nobody /app
 # Copy the compiled binary from builder
 COPY --from=builder --chown=nobody:root /app/target/release/zero-to-graphql-using-rust ./
 
+# Copy the database configuration directory
+COPY --chown=nobody:root config ./config
+
 USER nobody
 
 # Start the web server by default

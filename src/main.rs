@@ -32,14 +32,16 @@ async fn main() -> std::io::Result<()> {
     // Initialize logging
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    // Load database configuration
+    let db_config = db::DbConfig::load().expect("Failed to load database.yml configuration");
+    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| db_config.to_connection_string());
     
     // Parse CLI arguments for setup/migrate/seed
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         match args[1].as_str() {
             "setup" | "--setup" => {
-                if let Err(e) = db::setup_database(&database_url).await {
+                if let Err(e) = db::setup_database_with_config(&db_config).await {
                     eprintln!("Database setup failed: {}", e);
                     std::process::exit(1);
                 }
@@ -52,7 +54,7 @@ async fn main() -> std::io::Result<()> {
                 return Ok(());
             }
             "migrate" | "--migrate" => {
-                if let Err(e) = db::setup_database(&database_url).await {
+                if let Err(e) = db::setup_database_with_config(&db_config).await {
                     eprintln!("Database migration failed: {}", e);
                     std::process::exit(1);
                 }
@@ -91,14 +93,9 @@ async fn main() -> std::io::Result<()> {
     
     // Default: Start web server
     log::info!("Connecting to database...");
-    let pool = sqlx::PgPool::connect(&database_url)
+    let pool = db::setup_database_with_config(&db_config)
         .await
-        .expect("Failed to connect to Postgres");
-        
-    // Ensure migrations are run on startup
-    if let Err(e) = sqlx::migrate!("./migrations").run(&pool).await {
-        log::warn!("Startup migration run returned error: {}", e);
-    }
+        .expect("Failed to connect to and migrate Postgres database");
     
     let schema = Arc::new(graphql::create_schema());
     let port = env::var("PORT").unwrap_or_else(|_| "4000".to_string());
