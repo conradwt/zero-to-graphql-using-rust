@@ -1,0 +1,28 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+  "name": "Rust & PostgreSQL (Community)",
+  "dockerComposeFile": "compose.yml",
+  "service": "rust",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "vadimcn.vscode-lldb"
+      ],
+      "settings": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true,
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true
+      }
+    }
+  },
+  "forwardPorts": [
+    4000,
+    5432
+  ],
+  "remoteUser": "vscode"
+}

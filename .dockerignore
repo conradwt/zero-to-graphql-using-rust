@@ -1,0 +1,22 @@
+# Docker build context exclusions
+.dockerignore
+.git
+!.git/HEAD
+!.git/refs
+
+# Rust build target
+/target/
+
+# Local configuration files
+.env
+.env*.local
+
+# IDE configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Test directories
+/tests/

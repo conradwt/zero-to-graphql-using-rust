@@ -1,0 +1,13 @@
+# Cargo targets
+/target/
+
+# Local env files
+.env
+.env*.local
+
+# IDE configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

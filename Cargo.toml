@@ -1,0 +1,20 @@
+[package]
+name = "zero-to-graphql-using-rust"
+version = "0.1.0"
+edition = "2024"
+authors = ["Conrad Taylor <conradwt@gmail.com>"]
+license = "MIT"
+
+[dependencies]
+actix-web = "4.14.0"
+actix-cors = "0.7.1"
+juniper = { version = "0.17.1", features = ["chrono"] }
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "chrono", "macros"] }
+tokio = { version = "1.52.3", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15"
+env_logger = "0.11"
+log = "0.4"
+futures-util = "0.3"

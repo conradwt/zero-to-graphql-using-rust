@@ -1,0 +1,10 @@
+-- Create people table
+CREATE TABLE people (
+    id BIGSERIAL PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    inserted_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
+);
