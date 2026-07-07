@@ -149,7 +149,7 @@ pub async fn setup_database_with_config(config: &DbConfig) -> Result<PgPool, Box
         .await?;
         
     // Run embedded migrations
-    sqlx::migrate!("./db").run(&pool).await?;
+    sqlx::migrate!("./db/migrations").run(&pool).await?;
     log::info!("Migrations run successfully.");
     
     Ok(pool)
