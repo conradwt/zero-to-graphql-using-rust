@@ -36,7 +36,7 @@ RUN cargo build --release
 RUN rm -rf src
 
 # Copy migrations (needed at compile time for sqlx::migrate! embedding)
-COPY migrations ./migrations
+COPY db ./db
 
 # Copy actual source code
 COPY src ./src

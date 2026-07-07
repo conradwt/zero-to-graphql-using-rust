@@ -144,9 +144,9 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
     serde_yaml = "0.9.34"
     ```
 
-5.  create database migrations for the tables. We will place these under `migrations/`:
+5.  create database migrations for the tables. We will place these under `db/`:
 
-    `migrations/20160730004705_create_people.sql`:
+    `db/20160730004705_create_people.sql`:
 
     ```sql
     -- Create people table
@@ -161,7 +161,7 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
     );
     ```
 
-    `migrations/20160730024335_create_friendships.sql`:
+    `db/20160730024335_create_friendships.sql`:
 
     ```sql
     -- Create friendships table
@@ -236,7 +236,7 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
         let pool = PgPool::connect(database_url).await?;
         
         // Run embedded migrations
-        sqlx::migrate!("./migrations").run(&pool).await?;
+        sqlx::migrate!("./db").run(&pool).await?;
         log::info!("Migrations run successfully.");
         
         Ok(pool)
@@ -582,7 +582,7 @@ Note: This tutorial was updated on macOS 26.5.1 (Tahoe).
             .await
             .expect("Failed to connect to Postgres");
             
-        if let Err(e) = sqlx::migrate!("./migrations").run(&pool).await {
+        if let Err(e) = sqlx::migrate!("./db").run(&pool).await {
             log::warn!("Startup migration run returned error: {}", e);
         }
         
